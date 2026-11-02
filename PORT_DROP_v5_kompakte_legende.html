@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PORT DROP – Modern Edition</title>
+<style>
+:root{
+  --bg:#07111f;
+  --bg2:#0b1830;
+  --panel:rgba(13,24,44,.8);
+  --panel-2:rgba(18,33,57,.92);
+  --line:rgba(144,190,255,.16);
+  --text:#edf5ff;
+  --muted:#9eb3d1;
+  --shadow:0 18px 50px rgba(0,0,0,.38);
+  --radius:18px;
+  --danger:#ff557b;
+  --ok:#61e3a4;
+  --warn:#ffcf5b;
+  font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 15% 20%, rgba(79,140,255,.20), transparent 28%),
+    radial-gradient(circle at 85% 15%, rgba(190,79,255,.16), transparent 24%),
+    radial-gradient(circle at 60% 80%, rgba(0,235,190,.12), transparent 26%),
+    linear-gradient(160deg, #050c17 0%, #0a1324 35%, #0c1a32 100%);
+  padding:22px;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:30px 30px;
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,.5), transparent 90%);
+}
+main{max-width:1440px;margin:0 auto}
+.topbar,.card,.legend,.board-shell,.input-shell,.settings,.stat{
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px 20px;box-shadow:var(--shadow);
+}
+.brand h1{margin:0;font-size:32px;letter-spacing:.02em}
+.brand p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.brand .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:rgba(97,131,255,.14);color:#bfd3ff;font-size:12px;border:1px solid rgba(151,181,255,.18);margin-bottom:6px}
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+button,select,input{font:inherit}
+button,select{
+  border:1px solid rgba(158,194,255,.18);
+  background:linear-gradient(180deg, rgba(27,46,79,.96), rgba(18,34,57,.96));
+  color:var(--text);
+  border-radius:14px;
+  padding:11px 14px;
+  cursor:pointer;
+  transition:.18s transform,.18s box-shadow,.18s border-color,.18s background;
+  box-shadow:0 8px 20px rgba(0,0,0,.24);
+}
+button:hover,select:hover{transform:translateY(-1px);border-color:rgba(157,211,255,.42);box-shadow:0 12px 24px rgba(0,0,0,.28)}
+button:active{transform:translateY(0)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid rgba(133,205,255,.95);outline-offset:2px}
+#fire,#startBtn{
+  background:linear-gradient(135deg,#35a4ff,#5758ff 55%, #8c4dff);
+  border-color:rgba(255,255,255,.18);
+  font-weight:800;
+}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:var(--shadow)}
+.stat small{display:block;color:var(--muted);font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.stat strong{display:block;font-size:26px;margin-top:6px}
+.stat.combo strong{font-size:22px}
+.layout{display:flex;gap:16px;align-items:flex-start}
+.play{flex:1;min-width:0}
+.board-shell{
+  background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:var(--shadow);
+}
+.board{
+  height:560px;position:relative;overflow:hidden;border-radius:20px;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(90,164,255,.18), transparent 38%),
+    linear-gradient(180deg, #081221 0%, #0c1730 48%, #0f2142 100%);
+  border:1px solid rgba(144,190,255,.12);
+}
+.board::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg, transparent, rgba(255,255,255,.02) 25%, transparent 55%), linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px), linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px);
+  background-size:auto, 48px 48px, 48px 48px;
+}
+.board::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:5px;
+  background:linear-gradient(90deg,#ff5a7e,#ff6ca0,#ffa65c);
+  box-shadow:0 0 26px rgba(255,92,125,.55);
+}
+.target{
+  position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;
+  min-height:56px;min-width:92px;max-width:170px;padding:10px 12px;border-radius:18px;
+  font-weight:800;font-size:14px;line-height:1.18;color:#fff;
+  border:1px solid rgba(255,255,255,.2);
+  box-shadow:0 12px 25px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.14);
+  transition:transform .1s ease;
+}
+.target::after{
+  content:"";position:absolute;inset:1px;border-radius:16px;pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.12), transparent 40%);
+}
+.target .mini{display:block;font-size:10px;opacity:.78;letter-spacing:.05em;text-transform:uppercase;font-weight:700;margin-bottom:3px}
+.target.hit{animation:targetHit .26s ease-out forwards}
+@keyframes targetHit{0%{transform:scale(1);opacity:1}50%{transform:scale(1.12)}100%{transform:scale(.4);opacity:0}}
+.target.web{background:linear-gradient(135deg,#1f96ff,#2462ff)}
+.target.mail{background:linear-gradient(135deg,#bc46ff,#6a5bff)}
+.target.remote{background:linear-gradient(135deg,#28d69a,#11a86f)}
+.target.network{background:linear-gradient(135deg,#2bcde8,#1f89d7)}
+.target.directory{background:linear-gradient(135deg,#ffcb47,#ff925c); color:#1f1b14}
+.target.files{background:linear-gradient(135deg,#ff8b4a,#ff5d6d)}
+.target.database{background:linear-gradient(135deg,#ff62a7,#a652ff)}
+.target.misc{background:linear-gradient(135deg,#8492a6,#52647f)}
+.overlay{
+  position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;
+  background:linear-gradient(180deg, rgba(7,13,25,.78), rgba(7,13,25,.92));
+}
+.overlay[hidden]{display:none}
+.overlay h2{margin:0 0 10px;font-size:34px}
+.overlay p{margin:0 0 18px;max-width:480px;color:#c6d5ea;line-height:1.55}
+.overlay .help{font-size:13px;color:#94add0;margin-bottom:18px}
+.input-shell{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:12px;box-shadow:var(--shadow)}
+.inputrow{display:flex;gap:10px}
+input{
+  flex:1;min-width:0;padding:16px 18px;border-radius:16px;border:1px solid rgba(156,193,255,.16);
+  background:linear-gradient(180deg, rgba(14,24,43,.96), rgba(10,19,35,.96));color:var(--text);font-size:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+#feedback{min-height:24px;margin-top:10px;color:#c0d3eb;font-size:13px}
+.legend{
+  width:450px;max-width:36%;background:var(--panel-2);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:var(--shadow)
+}
+.legend[hidden]{display:none}
+.legend-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.legend-head h3{margin:0;font-size:18px}
+.legend-head span{color:var(--muted);font-size:12px}
+.legend-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+.legend-item{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.05);
+  font-size:12px;line-height:1.28;background:rgba(255,255,255,.02)
+}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 12px currentColor}
+.legend-code{min-width:38px;font-weight:800;font-variant-numeric:tabular-nums}
+.legend-text{color:#dfeaff}
+.legend-item.web{background:rgba(42,110,255,.08)}
+.legend-item.web .legend-dot{color:#4db0ff;background:#4db0ff}
+.key.web{--category-color:#4db0ff}
+.legend-item.mail{background:rgba(156,88,255,.08)}
+.legend-item.mail .legend-dot{color:#aa7dff;background:#aa7dff}
+.key.mail{--category-color:#aa7dff}
+.legend-item.remote{background:rgba(43,214,154,.09)}
+.legend-item.remote .legend-dot{color:#52e2ac;background:#52e2ac}
+.key.remote{--category-color:#52e2ac}
+.legend-item.network{background:rgba(43,205,232,.08)}
+.legend-item.network .legend-dot{color:#4edbf3;background:#4edbf3}
+.key.network{--category-color:#4edbf3}
+.legend-item.directory{background:rgba(255,196,71,.10)}
+.legend-item.directory .legend-dot{color:#ffca51;background:#ffca51}
+.key.directory{--category-color:#ffca51}
+.legend-item.files{background:rgba(255,108,90,.10)}
+.legend-item.files .legend-dot{color:#ff7a68;background:#ff7a68}
+.key.files{--category-color:#ff7a68}
+.legend-item.database{background:rgba(255,98,167,.09)}
+.legend-item.database .legend-dot{color:#ff77b8;background:#ff77b8}
+.key.database{--category-color:#ff77b8}
+.legend-item.misc{background:rgba(138,150,171,.08)}
+.legend-item.misc .legend-dot{color:#96a3b7;background:#96a3b7}
+.key.misc{--category-color:#96a3b7}
+.legend-key{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.key{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);font-size:11px;color:#d7e5f8;white-space:nowrap}
+.legend-key .key[hidden]{display:none}
+.key::before{content:"";display:inline-block;flex:none;width:10px;height:10px;border-radius:50%;background:var(--category-color,#96a3b7);box-shadow:0 0 12px var(--category-color,#96a3b7)}
+.settings{display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px 16px;box-shadow:var(--shadow)}
+.settings label{font-size:13px;color:#d6e4f9}
+.settings select{margin-left:7px;padding:9px 11px;border-radius:12px}
+.speed-control{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:310px;flex:1}.speed-control label{white-space:nowrap}.speed-control input[type="range"]{flex:1;min-width:120px;padding:0;accent-color:#62b4ff;cursor:pointer;height:7px}.speed-control output{min-width:48px;text-align:center;color:#8cd6ff;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+.particles,.pulse{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.particle{position:absolute;width:8px;height:8px;border-radius:50%;opacity:1;box-shadow:0 0 18px currentColor;animation:particle .52s ease-out forwards}
+@keyframes particle{to{transform:translate(var(--tx),var(--ty)) scale(.25);opacity:0}}
+.shockwave{position:absolute;width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.7);animation:shock .42s ease-out forwards}
+@keyframes shock{to{transform:scale(4.4);opacity:0}}
+.beam{position:absolute;height:4px;border-radius:999px;background:linear-gradient(90deg, rgba(255,255,255,.08), currentColor 35%, rgba(255,255,255,.08));box-shadow:0 0 18px currentColor;transform-origin:left center;animation:beam .18s ease-out forwards}
+@keyframes beam{to{opacity:0;transform:scaleX(1.02)}}
+.toast{position:absolute;right:14px;top:14px;padding:8px 10px;border-radius:12px;background:rgba(10,21,39,.72);border:1px solid rgba(255,255,255,.08);font-size:12px;color:#d7e5f8;backdrop-filter:blur(6px)}
+@media(max-width:1120px){.layout{flex-direction:column}.legend{width:100%;max-width:100%}.board{height:500px}}
+@media(max-width:720px){body{padding:12px}.topbar{padding:16px}.brand h1{font-size:28px}.stats{grid-template-columns:repeat(2,1fr)}.board{height:420px}.legend-grid{grid-template-columns:1fr 1fr}.target{min-width:74px;max-width:128px;font-size:12px;min-height:50px}.inputrow{flex-direction:column}}
+@media(max-width:520px){.legend-grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.board{height:380px}}
+</style>
+</head>
+<body>
+<main>
+  <section class="topbar">
+    <div class="brand">
+      <div class="pill">Standalone HTML · Offline spielbar</div>
+      <h1>PORT DROP</h1>
+      <p>Netzwerkports trainieren · moderne Grafik · Farbcodierung · Treffer-Effekte</p>
+    </div>
+    <div class="controls">
+      <button id="toggleLegend">Legende ausblenden</button>
+      <button id="pauseBtn">Pause</button>
+      <button id="restartBtn">Neustart</button>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><small>Punkte</small><strong id="score">0</strong></div>
+    <div class="stat"><small>Leben</small><strong id="lives">5 / 5</strong></div>
+    <div class="stat"><small>Level</small><strong id="level">1</strong></div>
+    <div class="stat combo"><small>Combo</small><strong id="combo">×0</strong></div>
+  </section>
+
+  <section class="layout">
+    <div class="play">
+      <div class="board-shell">
+        <div class="board" id="board">
+          <div class="particles" id="fx"></div>
+          <div class="pulse" id="beamLayer"></div>
+          <div class="toast" id="zoneInfo">Farben zeigen Dienst-Kategorien</div>
+          <div class="overlay" id="overlay">
+            <h2 id="overlayTitle">Bereit?</h2>
+            <p id="overlayText">Fallende Ports abschießen, bevor sie die rote Linie erreichen. Gib die passende Portnummer oder den passenden Dienst ein und drücke Enter.</p>
+            <div class="help">Enter = Abschießen · Esc = Pause · Legende rechts ein-/ausblendbar</div>
+            <button id="startBtn">Spiel starten</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-shell">
+        <div class="inputrow">
+          <input id="answer" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Portnummer oder Dienst eingeben …" aria-label="Antwort eingeben">
+          <button id="fire">FEUER</button>
+        </div>
+        <div id="feedback" aria-live="polite">Enter = Abschießen · Farben helfen beim Zuordnen der Kategorien</div>
+      </div>
+
+      <div class="settings">
+        <div class="speed-control">
+          <label for="fallSpeed">Fallgeschwindigkeit</label>
+          <span style="color:var(--muted);font-size:12px">0,3×</span>
+          <input id="fallSpeed" type="range" min="0.3" max="2" step="0.1" value="0.7" aria-label="Fallgeschwindigkeit">
+          <span style="color:var(--muted);font-size:12px">2,0×</span>
+          <output id="speedValue" for="fallSpeed">0,7×</output>
+        </div>
+        <label>Port-Auswahl
+          <select id="portSet" aria-label="Port-Auswahl">
+            <option value="basics">Basics (12)</option>
+            <option value="extended">Erweitert (22)</option>
+            <option value="all">Alle (30)</option>
+          </select>
+        </label>
+        <label>Fragen
+          <select id="mode">
+            <option value="mix">Gemischt</option>
+            <option value="numbers">Portnummern fallen</option>
+            <option value="names">Dienste fallen</option>
+          </select>
+        </label>
+        <span style="color:var(--muted);font-size:13px"><span id="activeCount">12 von 30 Ports aktiv</span> · zweispaltige Legende</span>
+      </div>
+    </div>
+
+    <aside class="legend" id="legend">
+      <div class="legend-head">
+        <div>
+          <h3>Port-Legende</h3>
+          <span>Alle Ports auf einen Blick · farblich codiert</span>
+        </div>
+        <span id="legendCount">30 Einträge</span>
+      </div>
+      <div class="legend-grid" id="legendGrid"></div>
+      <div class="legend-key">
+        <span class="key web">Web</span>
+        <span class="key mail">Mail</span>
+        <span class="key remote">Remote</span>
+        <span class="key network">Netzwerk</span>
+        <span class="key directory">Verzeichnis</span>
+        <span class="key files">Datei</span>
+        <span class="key database">Datenbank</span>
+        <span class="key misc">Sonstiges</span>
+      </div>
+    </aside>
+  </section>
+</main>
+
+<script>
+(()=>{
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const entries = [
+    ['20','FTP-Daten',['ftp daten','ftp-data'],'files','Datei'],
+    ['21','FTP-Steuerung',['ftp','ftp steuerung','ftp control'],'files','Datei'],
+    ['22','SSH',['ssh','sftp','scp'],'remote','Remote'],
+    ['23','Telnet',['telnet'],'remote','Remote'],
+    ['25','SMTP',['smtp'],'mail','Mail'],
+    ['53','DNS',['dns'],'network','Netzwerk'],
+    ['67','DHCP-Server',['dhcp server','dhcp'],'network','Netzwerk'],
+    ['68','DHCP-Client',['dhcp client'],'network','Netzwerk'],
+    ['69','TFTP',['tftp'],'files','Datei'],
+    ['80','HTTP',['http'],'web','Web'],
+    ['110','POP3',['pop3'],'mail','Mail'],
+    ['123','NTP',['ntp'],'network','Netzwerk'],
+    ['143','IMAP',['imap'],'mail','Mail'],
+    ['161','SNMP',['snmp'],'network','Netzwerk'],
+    ['162','SNMP-Trap',['snmp trap','snmp traps'],'network','Netzwerk'],
+    ['389','LDAP',['ldap'],'directory','Verzeichnis'],
+    ['443','HTTPS',['https'],'web','Web'],
+    ['445','SMB',['smb','microsoft ds','microsoft-ds'],'files','Datei'],
+    ['465','SMTPS',['smtps','smtp ssl'],'mail','Mail'],
+    ['514','Syslog',['syslog'],'network','Netzwerk'],
+    ['587','SMTP Submission',['smtp submission','submission'],'mail','Mail'],
+    ['636','LDAPS',['ldaps'],'directory','Verzeichnis'],
+    ['993','IMAPS',['imaps'],'mail','Mail'],
+    ['995','POP3S',['pop3s'],'mail','Mail'],
+    ['1433','MS SQL Server',['mssql','ms sql','sql server'],'database','Datenbank'],
+    ['3306','MySQL',['mysql'],'database','Datenbank'],
+    ['3389','RDP',['rdp','remote desktop'],'remote','Remote'],
+    ['5432','PostgreSQL',['postgresql','postgres'],'database','Datenbank'],
+    ['5900','VNC',['vnc'],'remote','Remote'],
+    ['8080','HTTP-Alternative',['http alternative','http alt','http proxy'],'web','Web']
+  ].map(([n,name,aliases,cls,group])=>({n,name,aliases,cls,group}));
+
+  const norm = s => s.toLowerCase().trim().replace(/[\s_\-]+/g,' ').replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue');
+  const board = $('board');
+  const answer = $('answer');
+  const fx = $('fx');
+  const beamLayer = $('beamLayer');
+
+  const sets = {
+    basics: new Set(["21","22","25","53","67","68","80","110","143","443","445","3389"]),
+    extended: new Set(["20","21","22","23","25","53","67","68","69","80","110","123","143","161","162","389","443","445","587","636","993","995"]),
+    all: new Set(entries.map(p => p.n))
+  };
+  // Build only visible entries. Interleave halves so both columns fill evenly.
+  function renderLegend(selected){
+    const visible = entries.filter(p => selected.has(p.n));
+    const half = Math.ceil(visible.length / 2);
+    const ordered = [];
+    for(let i=0;i<half;i++){
+      ordered.push(visible[i]);
+      if(visible[i+half]) ordered.push(visible[i+half]);
+    }
+    $('legendGrid').innerHTML = ordered.map(p => `
+      <div class="legend-item ${p.cls}">
+        <span class="legend-dot"></span>
+        <span class="legend-code">${p.n}</span>
+        <span class="legend-text">${p.name}</span>
+      </div>`).join('');
+    $('legendCount').textContent = visible.length + ' Ports';
+  }
+
+  let state='ready', items=[], score=0, lives=5, combo=0, level=1, last=0, spawnClock=0, raf=0;
+  const maxLives = 5;
+
+  function updateStats(){
+    $('score').textContent = score;
+    $('lives').textContent = `${lives} / ${maxLives}`;
+    $('level').textContent = level;
+    $('combo').textContent = '×' + combo;
+  }
+
+  function showOverlay(title, text, buttonText){
+    $('overlayTitle').textContent = title;
+    $('overlayText').textContent = text;
+    $('startBtn').textContent = buttonText;
+    $('overlay').hidden = false;
+  }
+
+  function hideOverlay(){ $('overlay').hidden = true; }
+
+  function clearItems(){ items.forEach(i => i.el.remove()); items = []; }
+
+  function reset(){
+    cancelAnimationFrame(raf);
+    clearItems();
+    score=0; lives=maxLives; combo=0; level=1; last=0; spawnClock=0; state='ready';
+    updateStats();
+    $('feedback').textContent = 'Enter = Abschießen · Farben helfen beim Zuordnen der Kategorien';
+  }
+
+  function startGame(){
+    if(state === 'ready' || state === 'over') reset();
+    state = 'running';
+    hideOverlay();
+    $('pauseBtn').textContent = 'Pause';
+    last = performance.now();
+    raf = requestAnimationFrame(tick);
+    answer.focus();
+  }
+
+  function pauseGame(){
+    if(state === 'running'){
+      state = 'paused';
+      cancelAnimationFrame(raf);
+      showOverlay('Pausiert', 'Dein Spielstand bleibt erhalten. Mit einem Klick geht es weiter.', 'Fortsetzen');
+      $('pauseBtn').textContent = 'Fortsetzen';
+    } else if(state === 'paused'){
+      startGame();
+    }
+  }
+
+  function spawnItem(){
+    const selected = sets[$('portSet').value];
+    const pool = entries.filter(p => selected.has(p.n));
+    const item = pool[Math.floor(Math.random()*pool.length)];
+    const mode = $('mode').value;
+    const showNumber = mode === 'numbers' || (mode === 'mix' && Math.random() < 0.5);
+
+    const el = document.createElement('div');
+    el.className = `target ${item.cls}`;
+    el.innerHTML = `<div><span class="mini">${item.group}</span>${showNumber ? item.n : item.name}</div>`;
+    board.appendChild(el);
+
+    const x = 8 + Math.random() * Math.max(0, board.clientWidth - el.offsetWidth - 16);
+    const y = -el.offsetHeight - 10;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+
+    // Grundtempo in Pixeln pro Sekunde. Der Regler wirkt auch auf bereits fallende Ziele.
+    const speed = 80 + Math.random()*8;
+
+    items.push({el, item, showNumber, x, y, speed});
+  }
+
+  function createExplosion(x, y, cls){
+    const colors = {
+      web:'#4db0ff', mail:'#aa7dff', remote:'#52e2ac', network:'#4edbf3',
+      directory:'#ffca51', files:'#ff7a68', database:'#ff77b8', misc:'#96a3b7'
+    };
+    const color = colors[cls] || '#ffffff';
+
+    const wave = document.createElement('div');
+    wave.className = 'shockwave';
+    wave.style.left = (x-11) + 'px';
+    wave.style.top = (y-11) + 'px';
+    wave.style.color = color;
+    fx.appendChild(wave);
+    setTimeout(() => wave.remove(), 450);
+
+    for(let i=0;i<12;i++){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const angle = (Math.PI*2/12)*i + Math.random()*0.2;
+      const dist = 18 + Math.random()*38;
+      p.style.left = (x-4) + 'px';
+      p.style.top = (y-4) + 'px';
+      p.style.color = color;
+      p.style.background = color;
+      p.style.setProperty('--tx', Math.cos(angle)*dist + 'px');
+      p.style.setProperty('--ty', Math.sin(angle)*dist + 'px');
+      fx.appendChild(p);
+      setTimeout(() => p.remove(), 560);
+    }
+  }
+
+  function createBeam(x1, y1, x2, y2, cls){
+    const colors = {
+      web:'#4db0ff', mail:'#aa7dff', remote:'#52e2ac', network:'#4edbf3',
+      directory:'#ffca51', files:'#ff7a68', database:'#ff77b8', misc:'#96a3b7'
+    };
+    const color = colors[cls] || '#ffffff';
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx*dx + dy*dy);
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    const beam = document.createElement('div');
+    beam.className = 'beam';
+    beam.style.color = color;
+    beam.style.left = x1 + 'px';
+    beam.style.top = y1 + 'px';
+    beam.style.width = len + 'px';
+    beam.style.transform = `rotate(${angle}deg)`;
+    beamLayer.appendChild(beam);
+    setTimeout(() => beam.remove(), 220);
+  }
+
+  function markMiss(item){
+    $('feedback').textContent = `Verpasst: ${item.n} = ${item.name}`;
+  }
+
+  function tick(now){
+    if(state !== 'running') return;
+    const dt = Math.min((now - last)/1000, 0.05);
+    last = now;
+    spawnClock += dt;
+
+    // Neues Ziel unabhängig vom Tempo, damit der Regler ausschließlich die Fallgeschwindigkeit ändert.
+    const interval = 2.8;
+    if(spawnClock >= interval){
+      spawnClock = 0;
+      if(items.length < 14) spawnItem();
+    }
+
+    for(let i=items.length-1;i>=0;i--){
+      const it = items[i];
+      it.y += it.speed * Number($('fallSpeed').value) * dt;
+      it.el.style.top = it.y + 'px';
+      if(it.y + it.el.offsetHeight >= board.clientHeight){
+        it.el.remove();
+        items.splice(i,1);
+        lives--;
+        combo = 0;
+        updateStats();
+        markMiss(it.item);
+        if(lives <= 0){
+          state = 'over';
+          showOverlay('Game Over', `Punkte: ${score} · Level: ${level}`, 'Erneut spielen');
+          break;
+        }
+      }
+    }
+
+    if(state === 'running') raf = requestAnimationFrame(tick);
+  }
+
+  function fire(){
+    if(state !== 'running') return;
+    const raw = answer.value;
+    const value = norm(raw);
+    if(!value) return;
+
+    const idx = items.findIndex(obj => obj.showNumber
+      ? (norm(obj.item.name) === value || obj.item.aliases.some(a => norm(a) === value))
+      : obj.item.n === value
+    );
+
+    if(idx >= 0){
+      const hit = items.splice(idx,1)[0];
+      const rect = hit.el.getBoundingClientRect();
+      const boardRect = board.getBoundingClientRect();
+      const cx = rect.left - boardRect.left + rect.width/2;
+      const cy = rect.top - boardRect.top + rect.height/2;
+      createBeam(board.clientWidth/2, board.clientHeight-26, cx, cy, hit.item.cls);
+      createExplosion(cx, cy, hit.item.cls);
+      hit.el.classList.add('hit');
+      setTimeout(() => hit.el.remove(), 240);
+      combo++;
+      const gain = 100 + Math.min(combo,10)*12;
+      score += gain;
+      level = 1 + Math.floor(score / 1400);
+      $('feedback').textContent = `Treffer: ${hit.item.n} = ${hit.item.name} · +${gain}`;
+      updateStats();
+    } else {
+      combo = 0;
+      updateStats();
+      $('feedback').textContent = `Kein passendes Ziel: ${raw.slice(0,40)}`;
+    }
+
+    answer.value = '';
+    answer.focus();
+  }
+
+  function updatePortSet(){
+    const selected = sets[$('portSet').value];
+    $('activeCount').textContent = selected.size + ' von 30 Ports aktiv';
+    renderLegend(selected);
+    const groups = new Set(entries.filter(p => selected.has(p.n)).map(p => p.cls));
+    document.querySelectorAll('.legend-key .key').forEach(el => {
+      el.hidden = ![...groups].some(g => el.classList.contains(g));
+    });
+    // Beim Wechsel keine veralteten Ziele aus der vorherigen Auswahl behalten.
+    for(let i=items.length-1;i>=0;i--){
+      if(!selected.has(items[i].item.n)){items[i].el.remove();items.splice(i,1)}
+    }
+  }
+  $('portSet').addEventListener('change', updatePortSet);
+  updatePortSet();
+  $('fallSpeed').addEventListener('input', () => { $('speedValue').textContent = Number($('fallSpeed').value).toFixed(1).replace('.', ',') + '×'; });
+  $('startBtn').addEventListener('click', startGame);
+  $('pauseBtn').addEventListener('click', pauseGame);
+  $('restartBtn').addEventListener('click', () => {
+    reset();
+    showOverlay('Bereit?', 'Fallende Ports abschießen, bevor sie die rote Linie erreichen. Gib die passende Portnummer oder den passenden Dienst ein und drücke Enter.', 'Spiel starten');
+  });
+  $('toggleLegend').addEventListener('click', () => {
+    $('legend').hidden = !$('legend').hidden;
+    $('toggleLegend').textContent = $('legend').hidden ? 'Legende anzeigen' : 'Legende ausblenden';
+  });
+  $('fire').addEventListener('click', fire);
+  answer.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){ e.preventDefault(); fire(); }
+    if(e.key === 'Escape'){ e.preventDefault(); pauseGame(); }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden && state === 'running') pauseGame();
+  });
+
+  updateStats();
+})();
+</script>
+</body>
+</html>
